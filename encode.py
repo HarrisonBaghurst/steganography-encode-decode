@@ -4,7 +4,7 @@ def encode(msg_path="inputs\\input_message.txt", img_path="inputs\\input_image.p
 
     ### ---------- read text file ---------- ###
     text_file = open(msg_path, 'r') 
-    text = text_file.readline() 
+    text = text_file.read()
     msg_binary = '' 
     for char in text: 
 
