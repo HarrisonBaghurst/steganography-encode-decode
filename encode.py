@@ -9,12 +9,12 @@ def encode(msg_path="inputs\\input_message.txt", img_path="inputs\\input_image.p
     for char in text: 
 
         # convert char to binary code in exact 8 bit format
-        binary = bin(ord(char)).replace('0b', '') 
+        binary = bin(ord(char))[2:]
         while len(binary) < 8: 
             binary = '0' + binary
-
+        
         # add char binary to msg_binary 
-        msg_binary += binary         
+        msg_binary += binary     
 
     ### ---------- read image ---------- ###
     read_image = png.Reader(filename=img_path).asDirect()
@@ -29,8 +29,36 @@ def encode(msg_path="inputs\\input_message.txt", img_path="inputs\\input_image.p
     width = read_image[3]['size'][0] 
     height = read_image[3]['size'][1] 
 
+    ### ---------- encode binary into image ---------- ### 
+    pixels_row = 0 
+    pixels_column = 0 
+    for i in range(len(msg_binary)): 
+        if msg_binary[i] == '1': 
+            if pixels[pixels_row][pixels_column] % 2 == 0: 
+                pixels[pixels_row][pixels_column] += 1 
+                if pixels[pixels_row][pixels_column] >= 256: 
+                    pixels[pixels_row][pixels_column] -= 2
+        else: 
+            if pixels[pixels_row][pixels_column] % 2 != 0: 
+                pixels[pixels_row][pixels_column] -= 1 
+                if pixels[pixels_row][pixels_column] < 0: 
+                    pixels[pixels_row][pixels_column] += 2
+        pixels_column += 1
+        if pixels_column >= len(pixels[0]): 
+            pixels_column = 0 
+            pixels_row += 1
+
+    # add extra 8 bits to show end of message 
+    for i in range(8): 
+        if pixels[pixels_row][pixels_column] % 2 != 0: 
+            pixels[pixels_row][pixels_column] -= 1 
+        pixels_column += 1
+        if pixels_column >= len(pixels[0]): 
+            pixels_column = 0 
+            pixels_row += 1
+
     ### ---------- output image ---------- ###
-    write_image = png.Writer(width, height, greyscale=False) 
+    write_image = png.Writer(width, height, greyscale=False, bitdepth=read_image[3]['bitdepth']) 
     write_image.write(open("outputs\\output_image.png", "wb"), pixels) 
 
 encode() 
